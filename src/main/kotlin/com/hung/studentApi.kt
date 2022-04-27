@@ -18,12 +18,12 @@ data class JsonMessage(
     val className: String
 )
 
-fun JsonApi(id: Int, name: String, className: String): HttpHandler {
+fun JsonApi(student: JsonMessage): HttpHandler {
     val bodyLens = Body.auto<JsonMessage>().toLens()
 
     return routes(
         "/student" bind GET to {
-            Response(OK).with(bodyLens of JsonMessage(id, name, className))
+            Response(OK).with(bodyLens of student)
         },
         "/student" bind POST to {
             val received = bodyLens(it)
@@ -36,5 +36,6 @@ fun JsonApi(id: Int, name: String, className: String): HttpHandler {
 }
 
 fun main(){
-    JsonApi(1, "Tran Minh", "DI1796A1").asServer(SunHttp(8080)).start()
+    val student = JsonMessage(1, "Trieu Tu Vong", "DI1796A1")
+    JsonApi(student).asServer(SunHttp(8080)).start()
 }
