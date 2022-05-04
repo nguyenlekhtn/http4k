@@ -6,12 +6,12 @@ import org.http4k.core.Method.POST
 import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.format.Jackson.auto
-import org.http4k.lens.BiDiBodyLens
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
+import sun.invoke.empty.Empty
 
 data class Student(
     val id: Int,
@@ -21,23 +21,46 @@ data class Student(
 
 object StudentDb {
     private val userDb = mutableListOf(
-        Student(id = 1, name = "Jim", "DI1796A1"),
+        Student(id = 1, name = "Jim", "DI1796A2"),
         Student(id = 2, name = "Bob", "DI1796A1"),
-        Student(id = 3, name = "Sue", "DI1796A1"),
-        Student(id = 4, name = "Rita", "DI1796A1"),
-        Student(id = 5, name = "Charlie", "DI1796A1")
+        Student(id = 3, name = "Sue", "DI1796A2"),
+        Student(id = 4, name = "Jim", "DI1796A1"),
+        Student(id = 5, name = "Charlie", "DI1796A2")
     )
 
-    fun search(vararg ids: Int) = userDb.filter { ids.contains(it.id) }
-    fun delete(vararg ids: Int) = userDb.removeIf { ids.contains(it.id) }
+    fun searchById(id: Int?): List<Student> {
+        if(id != null){
+            return userDb.filter { it.id == id }
+        }
+        return emptyList()
+    }
+    fun search(name: String?, className: String?): List<Student> {
+        var result: List<Student> = userDb
+        if(name == null && className == null){
+            return emptyList()
+        }
+        if(name != null){
+            result = result.filter { it.name == name }
+        }
+        if(className != null){
+            result = result.filter { it.className == className }
+        }
+        return result
+    }
 }
 
 fun JsonApi(student: Student): HttpHandler {
     val bodyLens = Body.auto<List<Student>>().toLens()
 
     return routes(
-        "/student" bind GET to {
-            Response(OK).with(bodyLens of StudentDb.search(1))
+        "/student" bind GET to { request: Request ->
+            val name = request.query("name") ?: null
+            val className = request.query("className") ?: null
+            Response(OK).with(bodyLens of StudentDb.search(name, className))
+        },
+        "/student/{id:.*}" bind GET to { request: Request ->
+            val id = request.path("id")
+            Response(OK).with( bodyLens of StudentDb.searchById(id?.toInt()))
         },
         "/student" bind POST to {
             val received = bodyLens(it)
