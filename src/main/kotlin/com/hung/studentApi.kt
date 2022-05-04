@@ -12,18 +12,31 @@ import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 
-data class JsonMessage(
+data class Student(
     val id: Int,
     val name: String,
     val className: String
 )
 
-fun JsonApi(student: JsonMessage): HttpHandler {
-    val bodyLens = Body.auto<JsonMessage>().toLens()
+object StudentDb {
+    private val userDb = mutableListOf(
+        Student(id = 1, name = "Jim", "DI1796A1"),
+        Student(id = 2, name = "Bob", "DI1796A1"),
+        Student(id = 3, name = "Sue", "DI1796A1"),
+        Student(id = 4, name = "Rita", "DI1796A1"),
+        Student(id = 5, name = "Charlie", "DI1796A1")
+    )
+
+    fun search(ids: List<Int>) = userDb.filter { ids.contains(it.id) }
+    fun delete(ids: List<Int>) = userDb.removeIf { ids.contains(it.id) }
+}
+
+fun JsonApi(student: Student): HttpHandler {
+    val bodyLens = Body.auto<Student>().toLens()
 
     return routes(
         "/student" bind GET to {
-            Response(OK).with(bodyLens of student)
+            Response(OK).with(bodyLens of StudentDb.search(1))
         },
         "/student" bind POST to {
             val received = bodyLens(it)
@@ -36,6 +49,6 @@ fun JsonApi(student: JsonMessage): HttpHandler {
 }
 
 fun main(){
-    val student = JsonMessage(1, "Trieu Tu Vong", "DI1796A1")
+    val student = Student(1, "Trieu Tu Vong", "DI1796A1")
     JsonApi(student).asServer(SunHttp(8080)).start()
 }
