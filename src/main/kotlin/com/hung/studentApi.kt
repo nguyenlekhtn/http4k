@@ -49,7 +49,7 @@ object StudentDb {
     }
 }
 
-fun JsonApi(student: Student): HttpHandler {
+fun JsonApi(): HttpHandler {
     val bodyLens = Body.auto<List<Student>>().toLens()
 
     return routes(
@@ -74,6 +74,5 @@ fun JsonApi(student: Student): HttpHandler {
 
 
 fun main(){
-    val student = Student(1, "Trieu Tu Vong", "DI1796A1")
-    JsonApi(student).asServer(SunHttp(8080)).start()
+    JsonApi().asServer(SunHttp(8080)).start()
 }
