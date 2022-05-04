@@ -6,6 +6,7 @@ import org.http4k.core.Method.POST
 import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.format.Jackson.auto
+import org.http4k.lens.BiDiBodyLens
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
@@ -27,12 +28,12 @@ object StudentDb {
         Student(id = 5, name = "Charlie", "DI1796A1")
     )
 
-    fun search(ids: List<Int>) = userDb.filter { ids.contains(it.id) }
-    fun delete(ids: List<Int>) = userDb.removeIf { ids.contains(it.id) }
+    fun search(vararg ids: Int) = userDb.filter { ids.contains(it.id) }
+    fun delete(vararg ids: Int) = userDb.removeIf { ids.contains(it.id) }
 }
 
 fun JsonApi(student: Student): HttpHandler {
-    val bodyLens = Body.auto<Student>().toLens()
+    val bodyLens = Body.auto<List<Student>>().toLens()
 
     return routes(
         "/student" bind GET to {
@@ -47,6 +48,7 @@ fun JsonApi(student: Student): HttpHandler {
         )
     )
 }
+
 
 fun main(){
     val student = Student(1, "Trieu Tu Vong", "DI1796A1")
